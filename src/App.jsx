@@ -13,7 +13,7 @@ import NoteForm from "./NoteForm";
 import NoteList from "./NoteList";
 import TeacherForm from "./TeacherForm";
 import PublicNotes from "./PublicNotes";
-import SignUp from "./SignUp";
+import signUp from "./signUp";
 import Navbar from "./Navbar";
 
 function App() {
