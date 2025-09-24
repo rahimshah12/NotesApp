@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { db } from "./firebase";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 function NoteForm({ user }) {
   const [note, setNote] = useState("");
@@ -13,32 +13,29 @@ function NoteForm({ user }) {
       text: note,
       uid: user.uid,
       createdAt: serverTimestamp(),
-      localTime: Date.now()
     });
 
-    setNote(""); 
+    setNote("");
   };
 
   return (
-    <div className="flex flex-col items-center">
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col gap-3 items-center w-full max-w-md"
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white shadow-md rounded-xl p-6 mb-6 flex flex-col gap-4"
+    >
+      <textarea
+        className="w-full h-28 border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+        placeholder="Write your note..."
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+      />
+      <button
+        type="submit"
+        className="bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition"
       >
-        <textarea
-          className="w-full h-32 border border-black rounded p-2"
-          placeholder="Write your notes here..."
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-        ></textarea>
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-600 transition mx-auto block"
-        >
-          Add Note
-        </button>
-      </form>
-    </div>
+        Add Note
+      </button>
+    </form>
   );
 }
 

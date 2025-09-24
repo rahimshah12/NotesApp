@@ -14,30 +14,27 @@ function TeacherForm() {
       createdAt: serverTimestamp(),
     });
 
-    setNote(""); // form reset
+    setNote("");
   };
 
   return (
-    <div className="flex flex-col items-center mt-6">
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col gap-3 items-center w-full max-w-md"
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white shadow-md rounded-xl p-6 mb-6 flex flex-col gap-4"
+    >
+      <textarea
+        className="w-full h-28 border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+        placeholder="Write public note for all students..."
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+      />
+      <button
+        type="submit"
+        className="bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition"
       >
-        <textarea
-          className="w-full h-32 border border-black rounded p-2"
-          placeholder="Write public note for all students..."
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-        ></textarea>
-
-        <button
-          type="submit"
-          className="bg-green-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-green-600 transition"
-        >
-          Share Public Note
-        </button>
-      </form>
-    </div>
+        Share Public Note
+      </button>
+    </form>
   );
 }
 

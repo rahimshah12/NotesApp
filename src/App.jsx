@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
-import { auth } from "./firebase";
-import { 
-  GoogleAuthProvider, 
-  signInWithPopup, 
-  signOut, 
-  onAuthStateChanged, 
-  signInWithEmailAndPassword 
+import React, { useEffect, useState } from "react";
+import { auth, provider } from "./firebase";
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
 } from "firebase/auth";
 
 import NoteForm from "./NoteForm";
@@ -20,93 +20,83 @@ function App() {
   const teacherPassword = "abc123";
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsub = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
-    return () => unsubscribe();
+    return () => unsub();
   }, []);
 
   const handleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    setUser(result.user);
+    await signInWithPopup(auth, provider);
   };
 
   const handleTeacherLogin = async () => {
     try {
-      const userCredential = await signInWithEmailAndPassword(
+      const result = await signInWithEmailAndPassword(
         auth,
         teacherEmail,
         teacherPassword
       );
-      setUser(userCredential.user);
+      setUser(result.user);
     } catch (error) {
-      console.error("Teacher login failed:", error.message);
-      alert("Teacher login failed. Check credentials in Firebase.");
+      alert("Teacher login failed. Please check Firebase Auth credentials.");
     }
   };
 
   const handleLogout = async () => {
     await signOut(auth);
-    setUser(null);
   };
 
   const isTeacher = user?.email === teacherEmail;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center">
-
-      {/* Logout button top-right */}
-      {user && (
-        <div className="w-full flex justify-end p-4">
+    <div className="min-h-screen bg-gray-100">
+      {/* Navbar */}
+      <header className="bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md">
+        <h1 className="text-xl font-bold">📝 Notes App</h1>
+        {user ? (
           <button
             onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition cursor-pointer"
+            className="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600 transition"
           >
             Logout
           </button>
-        </div>
-      )}
+        ) : null}
+      </header>
 
-      <div className="flex flex-col items-center justify-center gap-6 w-full max-w-2xl">
+      <main className="p-6">
         {!user ? (
-          <>
+          <div className="flex flex-col items-center gap-4 mt-20">
             <button
               onClick={handleLogin}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition cursor-pointer mt-40"
+              className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
             >
-              Sign in with Google
+              Login with Google (Student)
             </button>
-
             <button
               onClick={handleTeacherLogin}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition cursor-pointer"
+              className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition"
             >
               Teacher Login
             </button>
-          </>
+          </div>
         ) : (
-          <>
-            <p className="text-lg font-medium text-center">
-              Welcome {user.displayName || user.email}
-            </p>
-
-            {/* Student view */}
-            {!isTeacher && (
+          <div className="max-w-6xl mx-auto">
+            {isTeacher ? (
+              <>
+                <TeacherForm />
+                <PublicNotes user={user} />
+              </>
+            ) : (
               <>
                 <NoteForm user={user} />
                 <NoteList user={user} />
+                <PublicNotes user={user} />
               </>
             )}
-
-            {/* Teacher view */}
-            {isTeacher && <TeacherForm />}
-
-            {/* Public notes for all users */}
-            <PublicNotes user={user} />
-          </>
+          </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
