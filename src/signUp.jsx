@@ -1,106 +1,77 @@
 // src/SignUp.jsx
-import { useState } from "react";
+import React, { useState } from "react";
 import { auth } from "./firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 function SignUp({ onSignedUp }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [error, setError] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSignUp = async (e) => {
     e.preventDefault();
-    setError("");
+    if (!email || !password || !displayName) return;
+
     try {
+      setLoading(true);
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
 
-      // Update display name
-      if (name) {
-        await updateProfile(userCredential.user, { displayName: name });
-      }
+      // Set display name
+      await updateProfile(userCredential.user, { displayName });
 
-      onSignedUp(userCredential.user);
-    } catch (err) {
-      setError(err.message);
+      setLoading(false);
+      onSignedUp(userCredential.user); // Notify App.jsx about new user
+    } catch (error) {
+      setLoading(false);
+      alert(error.message);
+      console.error("Sign up error:", error);
     }
   };
 
   return (
-    <div className="w-full max-w-md bg-white shadow-lg rounded-2xl p-8 border border-gray-100">
-      <h2 className="text-2xl font-bold text-center text-indigo-600 mb-6">
-        Create Your Account
-      </h2>
+    <div className="flex justify-center items-center w-full px-4">
+      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md flex flex-col gap-6">
+        <h2 className="text-2xl font-bold text-center text-indigo-600">
+          Create Account
+        </h2>
 
-      {error && (
-        <div className="bg-red-100 text-red-700 px-3 py-2 rounded-lg text-sm mb-4">
-          {error}
-        </div>
-      )}
+        <input
+          type="text"
+          placeholder="Full Name"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        />
 
-      <form onSubmit={handleSignUp} className="flex flex-col gap-4">
-        {/* Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Full Name
-          </label>
-          <input
-            type="text"
-            placeholder="John Doe"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none"
-          />
-        </div>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        />
 
-        {/* Email */}
-        <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Email Address
-          </label>
-          <input
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none"
-          />
-        </div>
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        />
 
-        {/* Password */}
-        <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Password
-          </label>
-          <input
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none"
-          />
-        </div>
-
-        {/* Submit */}
         <button
-          type="submit"
-          className="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition"
+          onClick={handleSignUp}
+          disabled={loading}
+          className="bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700 transition cursor-pointer"
         >
-          Sign Up
+          {loading ? "Signing Up..." : "Sign Up"}
         </button>
-      </form>
-
-      <p className="text-sm text-gray-500 text-center mt-6">
-        Already have an account?{" "}
-        <span className="text-indigo-600 font-medium">Login instead</span>
-      </p>
+      </div>
     </div>
   );
 }
