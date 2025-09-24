@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { auth, provider } from "./firebase";
+// src/App.jsx
+import { useEffect, useState } from "react";
+import { auth } from "./firebase";
 import {
   GoogleAuthProvider,
   signInWithPopup,
@@ -12,91 +13,124 @@ import NoteForm from "./NoteForm";
 import NoteList from "./NoteList";
 import TeacherForm from "./TeacherForm";
 import PublicNotes from "./PublicNotes";
+import SignUp from "./SignUp";
+import Navbar from "./Navbar";
 
 function App() {
   const [user, setUser] = useState(null);
+  const [showSignUp, setShowSignUp] = useState(false);
 
   const teacherEmail = "teacher@example.com";
   const teacherPassword = "abc123";
 
+  // Track login state
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
-    return () => unsub();
+    return () => unsubscribe();
   }, []);
 
+  // Google login
   const handleLogin = async () => {
-    await signInWithPopup(auth, provider);
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    setUser(result.user);
   };
 
+  // Teacher login
   const handleTeacherLogin = async () => {
     try {
-      const result = await signInWithEmailAndPassword(
+      const userCredential = await signInWithEmailAndPassword(
         auth,
         teacherEmail,
         teacherPassword
       );
-      setUser(result.user);
+      setUser(userCredential.user);
     } catch (error) {
-      alert("Teacher login failed. Please check Firebase Auth credentials.");
+      console.error("Teacher login failed:", error.message);
+      alert("Teacher login failed. Check credentials in Firebase.");
     }
   };
 
+  // Logout
   const handleLogout = async () => {
     await signOut(auth);
+    setUser(null);
   };
 
   const isTeacher = user?.email === teacherEmail;
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Navbar */}
-      <header className="bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md">
-        <h1 className="text-xl font-bold">📝 Notes App</h1>
-        {user ? (
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600 transition"
-          >
-            Logout
-          </button>
-        ) : null}
-      </header>
+      <Navbar user={user} handleLogout={handleLogout} />
 
-      <main className="p-6">
+      {/* Main Content */}
+      <div className="flex flex-col items-center justify-center mt-10 w-full">
         {!user ? (
-          <div className="flex flex-col items-center gap-4 mt-20">
-            <button
-              onClick={handleLogin}
-              className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
-            >
-              Login with Google (Student)
-            </button>
-            <button
-              onClick={handleTeacherLogin}
-              className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition"
-            >
-              Teacher Login
-            </button>
-          </div>
+          !showSignUp ? (
+            <div className="flex justify-center items-center min-h-[70vh] w-full px-4">
+              <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md flex flex-col gap-6">
+                <h2 className="text-2xl font-bold text-center text-indigo-600">
+                  Welcome!
+                </h2>
+
+                {/* Google login */}
+                <button
+                  onClick={handleLogin}
+                  className="bg-green-500 text-white py-3 rounded-xl font-medium hover:bg-green-600 transition cursor-pointer"
+                >
+                  Login with Google
+                </button>
+
+                {/* Teacher login */}
+                <button
+                  onClick={handleTeacherLogin}
+                  className="bg-blue-500 text-white py-3 rounded-xl font-medium hover:bg-blue-600 transition cursor-pointer"
+                >
+                  Teacher Login
+                </button>
+
+                {/* Signup link */}
+                <p className="text-center text-gray-600">
+                  Don't have an account?{" "}
+                  <button
+                    onClick={() => setShowSignUp(true)}
+                    className="text-indigo-600 font-medium hover:underline cursor-pointer"
+                  >
+                    Sign Up
+                  </button>
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex justify-center items-center min-h-[70vh] w-full px-4">
+              <SignUp onSignedUp={(user) => setUser(user)} />
+            </div>
+          )
         ) : (
-          <div className="max-w-6xl mx-auto">
-            {isTeacher ? (
-              <>
-                <TeacherForm />
-                <PublicNotes user={user} />
-              </>
-            ) : (
+          <>
+            <p className="text-lg font-medium text-center mt-4">
+              Welcome {user.displayName || user.email}
+            </p>
+
+            {/* Student view */}
+            {!isTeacher && (
               <>
                 <NoteForm user={user} />
                 <NoteList user={user} />
-                <PublicNotes user={user} />
               </>
             )}
-          </div>
+
+            {/* Teacher view */}
+            {isTeacher && <TeacherForm />}
+
+            {/* Public notes */}
+            <PublicNotes user={user} />
+          </>
         )}
-      </main>
+      </div>
     </div>
   );
 }
